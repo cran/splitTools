@@ -1,0 +1,8 @@
+6fea7a85a8d22c27fd975ef6f343b082 *DESCRIPTION
+a0b060a7e635c93ea9ae885bb003710b *NAMESPACE
+d2537d3eea9737b8f6c72d02dcf4246e *NEWS.md
+35fd800187041f7820dcf4f98bb1e88c *R/create_folds.R
+9986cd9f2362f1d91c77e74e52f57b68 *R/partition.R
+e361afcf81b5bc1d36129900a788c65f *README.md
+63eb687a2f35e67c683e94b158f9e0d9 *man/create_folds.Rd
+8e88206ad50e7db8e9cfdd7c6cf4c211 *man/partition.Rd
