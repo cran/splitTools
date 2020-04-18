@@ -12,7 +12,7 @@
 
 <meta name="author" content="Michael Mayer" />
 
-<meta name="date" content="2020-02-16" />
+<meta name="date" content="2020-04-18" />
 
 <title>Using ‘splitTools’</title>
 
@@ -303,7 +303,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Using ‘splitTools’</h1>
 <h4 class="author">Michael Mayer</h4>
-<h4 class="date">2020-02-16</h4>
+<h4 class="date">2020-04-18</h4>
 
 
 
@@ -371,10 +371,10 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </div>
 <div id="cross-validation" class="section level2">
 <h2>Cross-validation</h2>
-<p>Since our data set consists of only 150 rows, investing 20% of observations for validation is neither robust nor data efficient. Let’s modify the modelling strategy by replacing simple validation by five-fold cross-validation, again using stratification on the response variable.</p>
+<p>Since our data set consists of only 150 rows, investing 20% of observations for validation is neither very robust nor data efficient. Let’s modify the modelling strategy by replacing simple validation by five-fold cross-validation, again using stratification on the response variable.</p>
 <ol style="list-style-type: decimal">
 <li><p>Split the data set <code>iris</code> into 80% training data and 20% test, stratified by the variable <code>Sepal.Length</code>.</p></li>
-<li><p>Use stratified five-fold cross-validation to tune the parameter <code>mtry</code>. We do this on the validation data.</p></li>
+<li><p>Use stratified five-fold cross-validation to tune the parameter <code>mtry</code>. We do this on the training data.</p></li>
 <li><p>After selecting the best <code>mtry</code> by this simple “GridSearchCV”, we challenge the final model on the test data set.</p></li>
 </ol>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># Split into training and test</span></span>
@@ -442,14 +442,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="time-series-cross-validation-and-block-partitioning" class="section level2">
 <h2>Time-series cross-validation and block partitioning</h2>
 <p>When modelling time series, usual cross-validation destroys the sequential nature of the data. This can be avoided by the following modification of k-fold cross-validation:</p>
-<p>The data is first split into <span class="math inline">\(k+1\)</span> blocks <span class="math inline">\(B_1, ..., B_{k+1}\)</span>, in sequential order. The following data sets are used in cross-validation:</p>
+<p>The data is first split into <span class="math inline">\(k+1\)</span> blocks <span class="math inline">\(B_1, ..., B_{k+1}\)</span>, in sequential order. Depending of <code>type = &quot;extending&quot;</code> (default) or <code>type == &quot;moving&quot;</code>, the following data sets are used in cross-validation:</p>
 <ul>
 <li><p>First fold: <span class="math inline">\(B_1\)</span> is used for training, <span class="math inline">\(B_2\)</span> for evaluation.</p></li>
-<li><p>Second fold: <span class="math inline">\(\{B_1, B_2\}\)</span> is used for training, <span class="math inline">\(B_3\)</span> for evaluation.</p></li>
+<li><p>Second fold: <span class="math inline">\(\{B_1, B_2\}\)</span> resp. <span class="math inline">\(B_2\)</span> is used for training if type is “extending” resp. “moving”, <span class="math inline">\(B_3\)</span> for evaluation.</p></li>
 <li><p>…</p></li>
-<li><p><span class="math inline">\(k\)</span>-th fold: <span class="math inline">\(\{B_1, ..., B_k\}\)</span> is used for training, <span class="math inline">\(B_{k+1}\)</span> for evaluation.</p></li>
+<li><p><span class="math inline">\(k\)</span>-th fold: <span class="math inline">\(\{B_1, ..., B_k\}\)</span> resp. <span class="math inline">\(B_{k}\)</span> is used for training for type “extending” resp. “moving”, <span class="math inline">\(B_{k+1}\)</span> for evaluation.</p></li>
 </ul>
-<p>This schema makes sure that the evaluation data set always follows the training data. Note that the training data grows over the whole process linearly.</p>
+<p>These schemata make sure that the evaluation data set always follows the training data. Note that the training data grows over the whole process linearly with <code>type = &quot;extending&quot;</code> whereas its length is approximately constant with <code>type = &quot;moving&quot;</code>.</p>
 <p>In order to have a final evaluation of the optimized model, typically an initial blocked split into sequential training and testing data is done.</p>
 <div id="example" class="section level3">
 <h3>Example</h3>
