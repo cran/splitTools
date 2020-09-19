@@ -1,8 +1,8 @@
 Type: Package
 Package: splitTools
 Title: Tools for Data Splitting
-Version: 0.2.1
-Date: 2020-04-18
+Version: 0.3.0
+Date: 2020-09-19
 Authors@R: 
     person(given = "Michael",
            family = "Mayer",
@@ -24,11 +24,11 @@ Depends: R (>= 3.1.0)
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.1
 Imports: stats
-Suggests: knitr, ranger
-RoxygenNote: 7.1.0
+Suggests: knitr, rmarkdown, testthat, ranger
 NeedsCompilation: no
-Packaged: 2020-04-18 15:23:13 UTC; Michael
+Packaged: 2020-09-19 11:51:42 UTC; Michael
 Author: Michael Mayer [aut, cre]
 Repository: CRAN
-Date/Publication: 2020-04-18 15:30:03 UTC
+Date/Publication: 2020-09-19 12:00:02 UTC
