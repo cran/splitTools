@@ -1,8 +1,8 @@
 Type: Package
 Package: splitTools
 Title: Tools for Data Splitting
-Version: 0.3.0
-Date: 2020-09-19
+Version: 0.3.1
+Date: 2020-10-13
 Authors@R: 
     person(given = "Michael",
            family = "Mayer",
@@ -28,7 +28,7 @@ RoxygenNote: 7.1.1
 Imports: stats
 Suggests: knitr, rmarkdown, testthat, ranger
 NeedsCompilation: no
-Packaged: 2020-09-19 11:51:42 UTC; Michael
+Packaged: 2020-10-13 05:42:26 UTC; Michael
 Author: Michael Mayer [aut, cre]
 Repository: CRAN
-Date/Publication: 2020-09-19 12:00:02 UTC
+Date/Publication: 2020-10-13 06:00:02 UTC
