@@ -159,4 +159,15 @@ points(tail(x, length(test$y)), test$y, col = "red", pch = ".", cex = 2)
 lines(tail(x, length(test$y)), test_pred)
 
 
+## -----------------------------------------------------------------------------
+set.seed(3451)
+
+ir <- iris[c("Sepal.Length", "Species")]
+y <- multi_strata(ir, k = 5)
+inds <- partition(
+  y, p = c(train = 0.6, valid = 0.2, test = 0.2), split_into_list = FALSE
+)
+
+# Check
+by(ir, inds, summary)
 

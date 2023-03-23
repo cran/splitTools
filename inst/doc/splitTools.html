@@ -12,29 +12,42 @@
 
 <meta name="author" content="Michael Mayer" />
 
-<meta name="date" content="2022-01-28" />
+<meta name="date" content="2023-03-23" />
 
 <title>Using ‘splitTools’</title>
 
-<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
 
 
 <style type="text/css">
-  code {
-    white-space: pre;
-  }
-  .sourceCode {
-    overflow: visible;
-  }
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
@@ -52,55 +65,54 @@ pre > code.sourceCode { white-space: pre-wrap; }
 pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
-  { counter-reset: source-line 0; }
+{ counter-reset: source-line 0; }
 pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
+{ position: relative; left: -4em; counter-increment: source-line; }
 pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
 div.sourceCode
-  {   }
+{ }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
 </style>
 <script>
 // apply pandoc div.sourceCode style to pre.sourceCode instead
@@ -109,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -127,7 +146,187 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 
 
@@ -141,32 +340,46 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">Using ‘splitTools’</h1>
 <h4 class="author">Michael Mayer</h4>
-<h4 class="date">2022-01-28</h4>
+<h4 class="date">2023-03-23</h4>
 
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p><code>splitTools</code> is a fast, lightweight toolkit for data splitting.</p>
-<p>Its two main functions <code>partition</code> and <code>create_folds</code> support</p>
+<p>{splitTools} is a fast, lightweight toolkit for data splitting.</p>
+<p>Its two main functions <code>partition()</code> and
+<code>create_folds()</code> support</p>
 <ul>
-<li><p>data partitioning (e.g. into training, validation and test),</p></li>
+<li><p>data partitioning (e.g. into training, validation and
+test),</p></li>
 <li><p>creating folds for cross-validation,</p></li>
 <li><p>creating <em>repeated</em> folds for cross-validation,</p></li>
-<li><p>stratified splitting (e.g. for stratified cross-validation),</p></li>
-<li><p>grouped splitting (e.g. for group-k-fold cross-validation) as well as</p></li>
-<li><p>blocked splitting (if the sequential order of the data should be retained).</p></li>
+<li><p>stratified splitting (e.g. for stratified
+cross-validation),</p></li>
+<li><p>grouped splitting (e.g. for group-k-fold cross-validation) as
+well as</p></li>
+<li><p>blocked splitting (if the sequential order of the data should be
+retained).</p></li>
 </ul>
-<p>The function <code>create_timefolds</code> does time-series splitting where the out-of-sample data follows the (growing) in-sample data.</p>
-<p>We will now illustrate how to use <code>splitTools</code> in a typical modelling workflow.</p>
+<p>The function <code>create_timefolds()</code> does time-series
+splitting where the out-of-sample data follows the (growing) in-sample
+data.</p>
+<p>We will now illustrate how to use {splitTools} in a typical modelling
+workflow.</p>
 </div>
 <div id="data-partitioning" class="section level2">
 <h2>Data partitioning</h2>
 <p>We will go through the following three steps:</p>
 <ol style="list-style-type: decimal">
-<li><p>Split the data set <code>iris</code> into 60% training data, 20% validation and 20% test, stratified by the variable <code>Sepal.Length</code>. Since it is numeric, stratification is done internally by quantile binning.</p></li>
-<li><p>We then tune the parameter <code>mtry</code> of a random forest to predict <code>Sepal.Length</code> as good as possible by the other variables. We do this on the validation data.</p></li>
-<li><p>After selecting the best <code>mtry</code>, we challenge the final model on the remaining test data set.</p></li>
+<li><p>Split the data set <code>iris</code> into 60% training data, 20%
+validation and 20% test, stratified by the variable
+<code>Sepal.Length</code>. Since it is numeric, stratification is done
+internally by quantile binning.</p></li>
+<li><p>We then tune the parameter <code>mtry</code> of a random forest
+to predict <code>Sepal.Length</code> as good as possible by the other
+variables. We do this on the validation data.</p></li>
+<li><p>After selecting the best <code>mtry</code>, we challenge the
+final model on the remaining test data set.</p></li>
 </ol>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(splitTools)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span>
@@ -209,11 +422,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="cross-validation" class="section level2">
 <h2>Cross-validation</h2>
-<p>Since our data set consists of only 150 rows, investing 20% of observations for validation is neither very robust nor data efficient. Let’s modify the modelling strategy by replacing simple validation by five-fold cross-validation, again using stratification on the response variable.</p>
+<p>Since our data set consists of only 150 rows, investing 20% of
+observations for validation is neither very robust nor data efficient.
+Let’s modify the modelling strategy by replacing simple validation by
+five-fold cross-validation, again using stratification on the response
+variable.</p>
 <ol style="list-style-type: decimal">
-<li><p>Split the data set <code>iris</code> into 80% training data and 20% test, stratified by the variable <code>Sepal.Length</code>.</p></li>
-<li><p>Use stratified five-fold cross-validation to tune the parameter <code>mtry</code>. We do this on the training data.</p></li>
-<li><p>After selecting the best <code>mtry</code> by this simple “GridSearchCV”, we challenge the final model on the test data set.</p></li>
+<li><p>Split the data set <code>iris</code> into 80% training data and
+20% test, stratified by the variable <code>Sepal.Length</code>.</p></li>
+<li><p>Use stratified five-fold cross-validation to tune the parameter
+<code>mtry</code>. We do this on the training data.</p></li>
+<li><p>After selecting the best <code>mtry</code> by this simple
+“GridSearchCV”, we challenge the final model on the test data
+set.</p></li>
 </ol>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Split into training and test</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(iris<span class="sc">$</span>Sepal.Length, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.8</span>, <span class="at">test =</span> <span class="fl">0.2</span>))</span>
@@ -250,7 +471,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="repeated-cross-validation" class="section level2">
 <h2>Repeated cross-validation</h2>
-<p>If feasible, repeated cross-validation is recommended in order to reduce uncertainty in decisions. The process is the same as above. Instead of getting five performance values per fold, we get five times the number of repetitions (here, three).</p>
+<p>If feasible, repeated cross-validation is recommended in order to
+reduce uncertainty in decisions. The process is the same as above.
+Instead of getting five performance values per fold, we get five times
+the number of repetitions (here, three).</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We start by making repeated, stratified cross-validation folds</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">create_folds</span>(train<span class="sc">$</span>Sepal.Length, <span class="at">k =</span> <span class="dv">5</span>, <span class="at">m_rep =</span> <span class="dv">3</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(folds)</span>
@@ -279,19 +503,39 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="time-series-cross-validation-and-block-partitioning" class="section level2">
 <h2>Time-series cross-validation and block partitioning</h2>
-<p>When modelling time series, usual cross-validation destroys the sequential nature of the data. This can be avoided by the following modification of k-fold cross-validation:</p>
-<p>The data is first split into <span class="math inline">\(k+1\)</span> blocks <span class="math inline">\(B_1, ..., B_{k+1}\)</span>, in sequential order. Depending of <code>type = &quot;extending&quot;</code> (default) or <code>type == &quot;moving&quot;</code>, the following data sets are used in cross-validation:</p>
+<p>When modelling time series, usual cross-validation destroys the
+sequential nature of the data. This can be avoided by the following
+modification of k-fold cross-validation:</p>
+<p>The data is first split into <span class="math inline">\(k+1\)</span>
+blocks <span class="math inline">\(B_1, ..., B_{k+1}\)</span>, in
+sequential order. Depending of <code>type = &quot;extending&quot;</code> (default)
+or <code>type == &quot;moving&quot;</code>, the following data sets are used in
+cross-validation:</p>
 <ul>
-<li><p>First fold: <span class="math inline">\(B_1\)</span> is used for training, <span class="math inline">\(B_2\)</span> for evaluation.</p></li>
-<li><p>Second fold: <span class="math inline">\(\{B_1, B_2\}\)</span> resp. <span class="math inline">\(B_2\)</span> is used for training if type is “extending” resp. “moving”, <span class="math inline">\(B_3\)</span> for evaluation.</p></li>
+<li><p>First fold: <span class="math inline">\(B_1\)</span> is used for
+training, <span class="math inline">\(B_2\)</span> for
+evaluation.</p></li>
+<li><p>Second fold: <span class="math inline">\(\{B_1, B_2\}\)</span>
+resp. <span class="math inline">\(B_2\)</span> is used for training if
+type is “extending” resp. “moving”, <span class="math inline">\(B_3\)</span> for evaluation.</p></li>
 <li><p>…</p></li>
-<li><p><span class="math inline">\(k\)</span>-th fold: <span class="math inline">\(\{B_1, ..., B_k\}\)</span> resp. <span class="math inline">\(B_{k}\)</span> is used for training for type “extending” resp. “moving”, <span class="math inline">\(B_{k+1}\)</span> for evaluation.</p></li>
+<li><p><span class="math inline">\(k\)</span>-th fold: <span class="math inline">\(\{B_1, ..., B_k\}\)</span> resp. <span class="math inline">\(B_{k}\)</span> is used for training for type
+“extending” resp. “moving”, <span class="math inline">\(B_{k+1}\)</span>
+for evaluation.</p></li>
 </ul>
-<p>These schemata make sure that the evaluation data set always follows the training data. Note that the training data grows over the whole process linearly with <code>type = &quot;extending&quot;</code> whereas its length is approximately constant with <code>type = &quot;moving&quot;</code>.</p>
-<p>In order to have a final evaluation of the optimized model, typically an initial blocked split into sequential training and testing data is done.</p>
+<p>These schemata make sure that the evaluation data set always follows
+the training data. Note that the training data grows over the whole
+process linearly with <code>type = &quot;extending&quot;</code> whereas its length
+is approximately constant with <code>type = &quot;moving&quot;</code>.</p>
+<p>In order to have a final evaluation of the optimized model, typically
+an initial blocked split into sequential training and testing data is
+done.</p>
 <div id="example" class="section level3">
 <h3>Example</h3>
-<p>We first create a time series and derive lagged features for training. Then, again, we optimize <code>mtry</code> of a random forest by time-series cross-validation. We evaluate the optimized model on the last 10% of the time series.</p>
+<p>We first create a time series and derive lagged features for
+training. Then, again, we optimize <code>mtry</code> of a random forest
+by time-series cross-validation. We evaluate the optimized model on the
+last 10% of the time series.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create data</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">452</span>)</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
@@ -391,6 +635,63 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">tail</span>(x, <span class="fu">length</span>(test<span class="sc">$</span>y)), test_pred)</span></code></pre></div>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 </div>
+</div>
+<div id="stratification-on-multiple-columns" class="section level2">
+<h2>Stratification on multiple columns</h2>
+<p>The helper function <code>multi_strata()</code> takes a data frame
+with multiple columns and turns it into a factor. Each level represents
+a stratification group containing (quite) similar rows. The factor can
+then be passed to <code>create_folds(, type = &quot;stratified&quot;)</code> or
+<code>partition(, type = &quot;stratified&quot;)</code> to produce (quite)
+balanced folds regarding these strata.</p>
+<p>Two grouping strategies are offered:</p>
+<ol style="list-style-type: decimal">
+<li>k-means clustering based on scaled input.</li>
+<li>All combinations of columns, where numeric input is being
+binned.</li>
+</ol>
+<p>Let’s have a look at a simple example where we want to model
+“Sepal.Width” as a function of the other variables in the iris data set.
+We want to do a stratified train/valid/test split, aiming at being
+balanced regarding not only the response “Sepal.Width”, but also
+regarding the important predictor “Species”. In this case, we could use
+the following workflow:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3451</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ir <span class="ot">&lt;-</span> iris[<span class="fu">c</span>(<span class="st">&quot;Sepal.Length&quot;</span>, <span class="st">&quot;Species&quot;</span>)]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">multi_strata</span>(ir, <span class="at">k =</span> <span class="dv">5</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  y, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.6</span>, <span class="at">valid =</span> <span class="fl">0.2</span>, <span class="at">test =</span> <span class="fl">0.2</span>), <span class="at">split_into_list =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">by</span>(ir, inds, summary)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: train</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.300   setosa    :30  </span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.100   versicolor:30  </span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.800   virginica :30  </span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.836                  </span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.400                  </span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.700                  </span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------ </span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: valid</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.400   setosa    :10  </span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.425   versicolor:10  </span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.900   virginica :10  </span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.903                  </span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.300                  </span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.900                  </span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------ </span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: test</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.700   setosa    :10  </span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.100   versicolor:10  </span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.700   virginica :10  </span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.807                  </span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.475                  </span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.100</span></span></code></pre></div>
 </div>
 
 
