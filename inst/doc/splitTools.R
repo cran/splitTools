@@ -48,7 +48,7 @@ inds <- partition(iris$Sepal.Length, p = c(train = 0.8, test = 0.2))
 train <- iris[inds$train, ]
 test <- iris[inds$test, ]
 
-# Get stratified cross-validation in-sample indices
+# Get stratified CV in-sample indices
 folds <- create_folds(train$Sepal.Length, k = 5)
 
 # Tune mtry by GridSearchCV
@@ -58,13 +58,15 @@ for (i in seq_along(valid_mtry)) {
   cv_mtry <- numeric()
   for (fold in folds) {
     fit <- ranger(Sepal.Length ~ ., data = train[fold, ], mtry = i)
-    cv_mtry <- c(cv_mtry, 
-                 rmse(train[-fold, "Sepal.Length"], predict(fit, train[-fold, ])$predictions))
+    cv_mtry <- c(
+      cv_mtry, 
+      rmse(train[-fold, "Sepal.Length"], predict(fit, train[-fold, ])$predictions)
+    )
   }
   valid_mtry[i] <- mean(cv_mtry)
 }
 
-# Result of cross-validation
+# Result of CV
 valid_mtry
 (best_mtry <- which.min(valid_mtry))
 
@@ -73,7 +75,7 @@ final_fit <- ranger(Sepal.Length ~ ., data = train, mtry = best_mtry)
 rmse(test$Sepal.Length, predict(final_fit, test)$predictions)
 
 ## -----------------------------------------------------------------------------
-# We start by making repeated, stratified cross-validation folds
+# We start by making repeated, stratified CV folds
 folds <- create_folds(train$Sepal.Length, k = 5, m_rep = 3)
 length(folds)
 
@@ -81,13 +83,15 @@ for (i in seq_along(valid_mtry)) {
   cv_mtry <- numeric()
   for (fold in folds) {
     fit <- ranger(Sepal.Length ~ ., data = train[fold, ], mtry = i)
-    cv_mtry <- c(cv_mtry, 
-                 rmse(train[-fold, "Sepal.Length"], predict(fit, train[-fold, ])$predictions))
+    cv_mtry <- c(
+      cv_mtry, 
+      rmse(train[-fold, "Sepal.Length"], predict(fit, train[-fold, ])$predictions)
+    )
   }
   valid_mtry[i] <- mean(cv_mtry)
 }
 
-# Result of cross-validation
+# Result of CV
 valid_mtry
 (best_mtry <- which.min(valid_mtry))
 
@@ -110,10 +114,12 @@ Lag <- function(z, k = 1) {
 Lag(1:4, k = 1)
 
 # Add lagged features
-dat <- data.frame(y, 
-                  lag1 = Lag(y), 
-                  lag2 = Lag(y, k = 2), 
-                  lag3 = Lag(y, k = 3))
+dat <- data.frame(
+  y, 
+  lag1 = Lag(y), 
+  lag2 = Lag(y, k = 2), 
+  lag3 = Lag(y, k = 3)
+)
 dat <- dat[complete.cases(dat), ]
 head(dat)
 cor(dat)
@@ -136,14 +142,15 @@ for (i in seq_along(valid_mtry)) {
   cv_mtry <- numeric()
   for (fold in folds) {
     fit <- ranger(y ~ ., data = train[fold$insample, ], mtry = i)
-    cv_mtry <- c(cv_mtry, 
-                 rmse(train[fold$outsample, "y"], 
-                      predict(fit, train[fold$outsample, ])$predictions))
+    cv_mtry <- c(
+      cv_mtry, 
+      rmse(train[fold$outsample, "y"], predict(fit, train[fold$outsample, ])$predictions)
+    )
   }
   valid_mtry[i] <- mean(cv_mtry)
 }
 
-# Result of cross-validation
+# Result of CV
 valid_mtry
 (best_mtry <- which.min(valid_mtry))
 
@@ -157,7 +164,6 @@ x <- seq_along(dat$y)
 plot(x, dat$y, pch = ".", cex = 2)
 points(tail(x, length(test$y)), test$y, col = "red", pch = ".", cex = 2)
 lines(tail(x, length(test$y)), test_pred)
-
 
 ## -----------------------------------------------------------------------------
 set.seed(3451)

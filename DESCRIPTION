@@ -1,6 +1,6 @@
 Package: splitTools
 Title: Tools for Data Splitting
-Version: 0.3.3
+Version: 1.0.0
 Authors@R: 
     person("Michael", "Mayer", , "mayermichael79@gmail.com", role = c("aut", "cre"))
 Description: Fast, lightweight toolkit for data splitting. Data sets can
@@ -21,8 +21,8 @@ BugReports: https://github.com/mayer79/splitTools/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2023-03-23 18:25:56 UTC; Michael
+Packaged: 2023-04-28 07:53:10 UTC; Michael
 Author: Michael Mayer [aut, cre]
 Maintainer: Michael Mayer <mayermichael79@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-03-23 18:50:02 UTC
+Date/Publication: 2023-04-28 08:30:01 UTC
