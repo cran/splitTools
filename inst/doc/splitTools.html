@@ -10,9 +10,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<meta name="author" content="Michael Mayer" />
 
-<meta name="date" content="2023-04-28" />
 
 <title>Using ‘splitTools’</title>
 
@@ -339,25 +337,23 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Using ‘splitTools’</h1>
-<h4 class="author">Michael Mayer</h4>
-<h4 class="date">2023-04-28</h4>
 
 
 
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
 <p>{splitTools} is a fast, lightweight toolkit for data splitting.</p>
 <p>Its two main functions <code>partition()</code> and
 <code>create_folds()</code> support</p>
 <ul>
-<li><p>data partitioning (e.g. into training, validation and
-test),</p></li>
-<li><p>creating folds for cross-validation (CV),</p></li>
-<li><p>creating <em>repeated</em> folds for CV,</p></li>
-<li><p>stratified splitting (e.g. for stratified CV),</p></li>
-<li><p>grouped splitting (e.g. for group-k-fold CV) as well as</p></li>
-<li><p>blocked splitting (if the sequential order of the data should be
-retained).</p></li>
+<li>data partitioning (e.g. into training, validation and test),</li>
+<li>creating (in- or out-of-sample) folds for cross-validation
+(CV),</li>
+<li>creating <em>repeated</em> folds for CV,</li>
+<li>stratified splitting,</li>
+<li>grouped splitting as well as</li>
+<li>blocked splitting (if the sequential order of the data should be
+retained).</li>
 </ul>
 <p>The function <code>create_timefolds()</code> does time-series
 splitting in the sense that the out-of-sample data follows the in-sample
@@ -365,283 +361,134 @@ data.</p>
 <p>We will now illustrate how to use {splitTools} in a typical modeling
 workflow.</p>
 </div>
-<div id="data-partitioning" class="section level2">
-<h2>Data partitioning</h2>
+<div id="usage" class="section level2">
+<h2>Usage</h2>
+<div id="simple-validation" class="section level3">
+<h3>Simple validation</h3>
 <p>We will go through the following steps:</p>
 <ol style="list-style-type: decimal">
-<li><p>We split the <code>iris</code> data into 60% training, 20%
+<li>We split the <code>iris</code> data into 60% training, 20%
 validation, and 20% test data, stratified by the variable
 <code>Sepal.Length</code>. Since this variable is numeric,
-stratification uses quantile binning.</p></li>
-<li><p>Based on the validation performance, we tune the parameter
-<code>mtry</code> of a random forest with response
-<code>Sepal.Length</code>.</p></li>
-<li><p>After selecting the best <code>mtry</code>, we evaluate the final
-model on the test data.</p></li>
+stratification uses quantile binning.</li>
+<li>We will model the response <code>Sepal.Length</code> with a linear
+regression, once with and once without interaction between
+<code>Species</code> and <code>Sepal.Width</code>.</li>
+<li>After selecting the better of the two models via validation RMSE, we
+evaluate the final model on the test data.</li>
 </ol>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(splitTools)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Split data into partitions</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3451</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(iris<span class="sc">$</span>Sepal.Length, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.6</span>, <span class="at">valid =</span> <span class="fl">0.2</span>, <span class="at">test =</span> <span class="fl">0.2</span>))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(inds)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 3</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ train: int [1:81] 2 3 6 7 8 10 11 18 19 20 ...</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ valid: int [1:34] 1 12 14 15 27 34 36 38 42 48 ...</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ test : int [1:35] 4 5 9 13 16 17 25 39 41 45 ...</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>train, ]</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>valid <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>valid, ]</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>test, ]</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Root-mean-squared error function used to evaluate results</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(y, pred) {</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sqrt</span>(<span class="fu">mean</span>((y <span class="sc">-</span> pred)<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Tune mtry on validation data</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>valid_mtry <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(train) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(valid_mtry)) {</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train, <span class="at">mtry =</span> i)</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  valid_mtry[i] <span class="ot">&lt;-</span> <span class="fu">rmse</span>(valid<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit, valid)<span class="sc">$</span>predictions)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>valid_mtry</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3809234 0.3242173 0.3208119 0.3241518</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>(best_mtry <span class="ot">&lt;-</span> <span class="fu">which.min</span>(valid_mtry))</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit and test final model</span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train, <span class="at">mtry =</span> best_mtry)</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(test<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(final_fit, test)<span class="sc">$</span>predictions)</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3480947</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Split data into partitions</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3451</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(iris<span class="sc">$</span>Sepal.Length, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.6</span>, <span class="at">valid =</span> <span class="fl">0.2</span>, <span class="at">test =</span> <span class="fl">0.2</span>))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(inds)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 3</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ train: int [1:81] 2 3 6 7 8 10 11 18 19 20 ...</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ valid: int [1:34] 1 12 14 15 27 34 36 38 42 48 ...</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ test : int [1:35] 4 5 9 13 16 17 25 39 41 45 ...</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>train, ]</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>valid <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>valid, ]</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>test, ]</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(y, pred) {</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sqrt</span>(<span class="fu">mean</span>((y <span class="sc">-</span> pred)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Use simple validation to decide on interaction yes/no...</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>fit1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> . <span class="sc">+</span> Species<span class="sc">:</span>Sepal.Width, <span class="at">data =</span> train)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(valid<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit1, valid))</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3020855</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(valid<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit2, valid))</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.2954321</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Yes! Choose and test final model</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(test<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit2, test))</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3482849</span></span></code></pre></div>
 </div>
-<div id="cv" class="section level2">
-<h2>CV</h2>
+<div id="cv" class="section level3">
+<h3>CV</h3>
 <p>Since the <code>iris</code> data consists of only 150 rows, investing
-20% of observations for validation seems like a waste of resources, and
-the performance estimates might not be very robust. So let’s replace
-simple validation by five-fold CV, again using stratification on the
-response variable.</p>
+20% of observations for validation seems like a waste of resources.
+Furthermore, the performance estimates might not be very robust. Let’s
+replace simple validation by five-fold CV, again using stratification on
+the response variable.</p>
 <ol style="list-style-type: decimal">
-<li><p>Split <code>iris</code> into 80% training data and 20% test,
-stratified by the variable <code>Sepal.Length</code>.</p></li>
-<li><p>Use stratified five-fold CV to tune the parameter
-<code>mtry</code>.</p></li>
-<li><p>After selecting the best <code>mtry</code> by this
-“GridSearchCV”, we evaluate the final model on the test data.</p></li>
+<li>Split <code>iris</code> into 80% training data and 20% test,
+stratified by the variable <code>Sepal.Length</code>.</li>
+<li>Use stratified five-fold CV to choose between the two models.</li>
+<li>We evaluate the final model on the test data.</li>
 </ol>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Split into training and test</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(iris<span class="sc">$</span>Sepal.Length, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.8</span>, <span class="at">test =</span> <span class="fl">0.2</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(iris<span class="sc">$</span>Sepal.Length, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.8</span>, <span class="at">test =</span> <span class="fl">0.2</span>), <span class="at">seed =</span> <span class="dv">87</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>train, ]</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> iris[inds<span class="sc">$</span>test, ]</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Get stratified CV in-sample indices</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">create_folds</span>(train<span class="sc">$</span>Sepal.Length, <span class="at">k =</span> <span class="dv">5</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">create_folds</span>(train<span class="sc">$</span>Sepal.Length, <span class="at">k =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">2734</span>)</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Tune mtry by GridSearchCV</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>valid_mtry <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(train) <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Vectors with results per model and fold</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>cv_rmse1 <span class="ot">&lt;-</span> cv_rmse2 <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">5</span>)</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(valid_mtry)) {</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  cv_mtry <span class="ot">&lt;-</span> <span class="fu">numeric</span>()</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (fold <span class="cf">in</span> folds) {</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train[fold, ], <span class="at">mtry =</span> i)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    cv_mtry <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      cv_mtry, </span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rmse</span>(train[<span class="sc">-</span>fold, <span class="st">&quot;Sepal.Length&quot;</span>], <span class="fu">predict</span>(fit, train[<span class="sc">-</span>fold, ])<span class="sc">$</span>predictions)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  valid_mtry[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(cv_mtry)</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Result of CV</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>valid_mtry</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3870915 0.3460605 0.3337763 0.3302831</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>(best_mtry <span class="ot">&lt;-</span> <span class="fu">which.min</span>(valid_mtry))</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 4</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Use optimal mtry to make model</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train, <span class="at">mtry =</span> best_mtry)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(test<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(final_fit, test)<span class="sc">$</span>predictions)</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.2970876</span></span></code></pre></div>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(folds)) {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  insample <span class="ot">&lt;-</span> train[folds[[i]], ]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> train[<span class="sc">-</span>folds[[i]], ]</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  fit1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> insample)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  fit2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> . <span class="sc">+</span> Species<span class="sc">:</span>Sepal.Width, <span class="at">data =</span> insample)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  cv_rmse1[i] <span class="ot">&lt;-</span> <span class="fu">rmse</span>(out<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit1, out))</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  cv_rmse2[i] <span class="ot">&lt;-</span> <span class="fu">rmse</span>(out<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit2, out))</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co"># CV-RMSE of model 1 -&gt; close winner</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cv_rmse1)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.330189</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co"># CV-RMSE of model 2</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cv_rmse2)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3306455</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit model 1 on full training data and evaluate on test data</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(test<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(final_fit, test))</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.2892289</span></span></code></pre></div>
 </div>
-<div id="repeated-cv" class="section level2">
-<h2>Repeated CV</h2>
+<div id="repeated-cv" class="section level3">
+<h3>Repeated CV</h3>
 <p>If feasible, <em>repeated</em> CV is recommended in order to reduce
-uncertainty in decisions. Otherwise, the process remains the same. When
-we use three repetitions in 5-fold CV, instead of getting five
-performance estimates, we get 15 such values.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We start by making repeated, stratified CV folds</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">create_folds</span>(train<span class="sc">$</span>Sepal.Length, <span class="at">k =</span> <span class="dv">5</span>, <span class="at">m_rep =</span> <span class="dv">3</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(folds)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 15</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(valid_mtry)) {</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  cv_mtry <span class="ot">&lt;-</span> <span class="fu">numeric</span>()</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (fold <span class="cf">in</span> folds) {</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train[fold, ], <span class="at">mtry =</span> i)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    cv_mtry <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      cv_mtry, </span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rmse</span>(train[<span class="sc">-</span>fold, <span class="st">&quot;Sepal.Length&quot;</span>], <span class="fu">predict</span>(fit, train[<span class="sc">-</span>fold, ])<span class="sc">$</span>predictions)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  valid_mtry[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(cv_mtry)</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Result of CV</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>valid_mtry</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3934294 0.3544207 0.3422013 0.3393454</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>(best_mtry <span class="ot">&lt;-</span> <span class="fu">which.min</span>(valid_mtry))</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 4</span></span>
+uncertainty in decisions. Otherwise, the process remains the same.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train/test split as before</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 15 folds instead of 5</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">create_folds</span>(train<span class="sc">$</span>Sepal.Length, <span class="at">k =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">2734</span>, <span class="at">m_rep =</span> <span class="dv">3</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>cv_rmse1 <span class="ot">&lt;-</span> cv_rmse2 <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">15</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Rest as before...</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(folds)) {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  insample <span class="ot">&lt;-</span> train[folds[[i]], ]</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> train[<span class="sc">-</span>folds[[i]], ]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  fit1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> insample)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  fit2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Sepal.Length <span class="sc">~</span> . <span class="sc">+</span> Species<span class="sc">:</span>Sepal.Width, <span class="at">data =</span> insample)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  cv_rmse1[i] <span class="ot">&lt;-</span> <span class="fu">rmse</span>(out<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit1, out))</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  cv_rmse2[i] <span class="ot">&lt;-</span> <span class="fu">rmse</span>(out<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(fit2, out))</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cv_rmse1)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3296087</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cv_rmse2)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.331373</span></span>
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Use optimal mtry to make model</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(Sepal.Length <span class="sc">~</span> ., <span class="at">data =</span> train, <span class="at">mtry =</span> best_mtry)</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(test<span class="sc">$</span>Sepal.Length, <span class="fu">predict</span>(final_fit, test)<span class="sc">$</span>predictions)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.2937055</span></span></code></pre></div>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Refit and test as before</span></span></code></pre></div>
 </div>
-<div id="time-series-cv-and-block-partitioning" class="section level2">
-<h2>Time-series CV and block partitioning</h2>
-<p>When modeling time series, usual CV destroys the sequential nature of
-the data. This can be avoided by the following modification of k-fold
-CV:</p>
-<p>The data is first split into <span class="math inline">\(k+1\)</span>
-blocks <span class="math inline">\(B_1, ..., B_{k+1}\)</span>, in
-sequential order. Depending of <code>type = &quot;extending&quot;</code> (default)
-or <code>type == &quot;moving&quot;</code>, the following data sets are used in
-CV:</p>
-<ul>
-<li><p>First fold: <span class="math inline">\(B_1\)</span> is used for
-training, <span class="math inline">\(B_2\)</span> for
-evaluation.</p></li>
-<li><p>Second fold: <span class="math inline">\(\{B_1, B_2\}\)</span>
-(type “extending”) or <span class="math inline">\(B_2\)</span> (type
-“moving”) are used for training, <span class="math inline">\(B_3\)</span> for evaluation.</p></li>
-<li><p>…</p></li>
-<li><p><span class="math inline">\(k\)</span>-th fold: Rows in <span class="math inline">\(\{B_1, ..., B_k\}\)</span> (“extending”) or <span class="math inline">\(B_{k}\)</span>(“moving”) are used for training,
-those in <span class="math inline">\(B_{k+1}\)</span> for
-evaluation.</p></li>
-</ul>
-<p>These schemata make sure that the evaluation data always follows the
-training data. Note that the training data grows over the whole process
-linearly with <code>type = &quot;extending&quot;</code>, whereas its length is
-approximately constant with <code>type = &quot;moving&quot;</code>.</p>
-<p>In order to have a final evaluation of the optimized model, typically
-an initial blocked split into sequential training and testing data is
-done.</p>
-<div id="example" class="section level3">
-<h3>Example</h3>
-<p>We first create a time series and derive lagged features for
-training. Then, again, we optimize <code>mtry</code> of a random forest
-by time-series CV. We evaluate the optimized model on the last 10% of
-the time series.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create data</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">452</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span> <span class="sc">*</span> pi, <span class="at">length.out =</span> n)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fl">0.2</span> <span class="sc">*</span> <span class="fu">sin</span>(t) <span class="sc">-</span> <span class="fl">0.1</span> <span class="sc">*</span> <span class="fu">cos</span>(t) <span class="sc">+</span> <span class="fl">0.2</span> <span class="sc">*</span> <span class="fu">runif</span>(n)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(y <span class="sc">~</span> t, <span class="at">pch =</span> <span class="st">&quot;.&quot;</span>, <span class="at">cex =</span> <span class="dv">2</span>)</span></code></pre></div>
-<p><img src="data:image/png;base64,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" /><!-- --></p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper function</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Lag <span class="ot">&lt;-</span> <span class="cf">function</span>(z, <span class="at">k =</span> <span class="dv">1</span>) {</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(z[<span class="sc">-</span><span class="fu">seq_len</span>(k)], <span class="fu">rep</span>(<span class="cn">NA</span>, k))</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">Lag</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">k =</span> <span class="dv">1</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  2  3  4 NA</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Add lagged features</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  y, </span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">lag1 =</span> <span class="fu">Lag</span>(y), </span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">lag2 =</span> <span class="fu">Lag</span>(y, <span class="at">k =</span> <span class="dv">2</span>), </span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">lag3 =</span> <span class="fu">Lag</span>(y, <span class="at">k =</span> <span class="dv">3</span>)</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat[<span class="fu">complete.cases</span>(dat), ]</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dat)</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              y         lag1         lag2        lag3</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 -0.085447174  0.075314649 -0.007841658  0.10081516</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  0.075314649 -0.007841658  0.100815165  0.09635395</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 -0.007841658  0.100815165  0.096353945 -0.06476294</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4  0.100815165  0.096353945 -0.064762935  0.10474890</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  0.096353945 -0.064762935  0.104748904  0.07030228</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 -0.064762935  0.104748904  0.070302283  0.01085425</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(dat)</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              y      lag1      lag2      lag3</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; y    1.0000000 0.8789100 0.8858208 0.8840929</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lag1 0.8789100 1.0000000 0.8791226 0.8858995</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lag2 0.8858208 0.8791226 1.0000000 0.8791388</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; lag3 0.8840929 0.8858995 0.8791388 1.0000000</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Block partitioning</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(dat<span class="sc">$</span>y, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.9</span>, <span class="at">test =</span> <span class="fl">0.1</span>), <span class="at">type =</span> <span class="st">&quot;blocked&quot;</span>)</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(inds)</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 2</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ train: int [1:898] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ test : int [1:99] 899 900 901 902 903 904 905 906 907 908 ...</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> dat[inds<span class="sc">$</span>train, ]</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> dat[inds<span class="sc">$</span>test, ]</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Get time series folds</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">create_timefolds</span>(train<span class="sc">$</span>y, <span class="at">k =</span> <span class="dv">5</span>)</span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(folds)</span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 5</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ Fold1:List of 2</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ insample : int [1:150] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ outsample: int [1:150] 151 152 153 154 155 156 157 158 159 160 ...</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ Fold2:List of 2</span></span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ insample : int [1:300] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ outsample: int [1:150] 301 302 303 304 305 306 307 308 309 310 ...</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ Fold3:List of 2</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ insample : int [1:450] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ outsample: int [1:150] 451 452 453 454 455 456 457 458 459 460 ...</span></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ Fold4:List of 2</span></span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ insample : int [1:600] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ outsample: int [1:150] 601 602 603 604 605 606 607 608 609 610 ...</span></span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ Fold5:List of 2</span></span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ insample : int [1:750] 1 2 3 4 5 6 7 8 9 10 ...</span></span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ outsample: int [1:148] 751 752 753 754 755 756 757 758 759 760 ...</span></span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="co"># Tune mtry by GridSearchCV</span></span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>valid_mtry <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(train) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(valid_mtry)) {</span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>  cv_mtry <span class="ot">&lt;-</span> <span class="fu">numeric</span>()</span>
-<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (fold <span class="cf">in</span> folds) {</span>
-<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(y <span class="sc">~</span> ., <span class="at">data =</span> train[fold<span class="sc">$</span>insample, ], <span class="at">mtry =</span> i)</span>
-<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>    cv_mtry <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>      cv_mtry, </span>
-<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rmse</span>(train[fold<span class="sc">$</span>outsample, <span class="st">&quot;y&quot;</span>], <span class="fu">predict</span>(fit, train[fold<span class="sc">$</span>outsample, ])<span class="sc">$</span>predictions)</span>
-<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>  valid_mtry[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(cv_mtry)</span>
-<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a><span class="co"># Result of CV</span></span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>valid_mtry</span>
-<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.08227426 0.08188822 0.08230784</span></span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>(best_mtry <span class="ot">&lt;-</span> <span class="fu">which.min</span>(valid_mtry))</span>
-<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2</span></span>
-<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a><span class="co"># Use optimal mtry to make model and evaluate on future test data</span></span>
-<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(y <span class="sc">~</span> ., <span class="at">data =</span> train, <span class="at">mtry =</span> best_mtry)</span>
-<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>test_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(final_fit, test)<span class="sc">$</span>predictions</span>
-<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a><span class="fu">rmse</span>(test<span class="sc">$</span>y, test_pred)</span>
-<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.07184702</span></span>
-<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
-<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(dat<span class="sc">$</span>y)</span>
-<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(x, dat<span class="sc">$</span>y, <span class="at">pch =</span> <span class="st">&quot;.&quot;</span>, <span class="at">cex =</span> <span class="dv">2</span>)</span>
-<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(<span class="fu">tail</span>(x, <span class="fu">length</span>(test<span class="sc">$</span>y)), test<span class="sc">$</span>y, <span class="at">col =</span> <span class="st">&quot;red&quot;</span>, <span class="at">pch =</span> <span class="st">&quot;.&quot;</span>, <span class="at">cex =</span> <span class="dv">2</span>)</span>
-<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">tail</span>(x, <span class="fu">length</span>(test<span class="sc">$</span>y)), test_pred)</span></code></pre></div>
-<p><img src="data:image/png;base64,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" /><!-- --></p>
-</div>
-</div>
-<div id="stratification-on-multiple-columns" class="section level2">
-<h2>Stratification on multiple columns</h2>
+<div id="stratification-on-multiple-columns" class="section level3">
+<h3>Stratification on multiple columns</h3>
 <p>The function <code>multi_strata()</code> creates a stratification
 factor from multiple columns that can then be passed to
 <code>create_folds(, type = &quot;stratified&quot;)</code> or
@@ -659,42 +506,43 @@ We want to do a stratified train/valid/test split, aiming at being
 balanced regarding not only the response “Sepal.Width”, but also
 regarding the important predictor “Species”. In this case, we could use
 the following workflow:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3451</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ir <span class="ot">&lt;-</span> iris[<span class="fu">c</span>(<span class="st">&quot;Sepal.Length&quot;</span>, <span class="st">&quot;Species&quot;</span>)]</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">multi_strata</span>(ir, <span class="at">k =</span> <span class="dv">5</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  y, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.6</span>, <span class="at">valid =</span> <span class="fl">0.2</span>, <span class="at">test =</span> <span class="fl">0.2</span>), <span class="at">split_into_list =</span> <span class="cn">FALSE</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">by</span>(ir, inds, summary)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: train</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.300   setosa    :30  </span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.100   versicolor:30  </span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.800   virginica :30  </span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.836                  </span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.400                  </span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.700                  </span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------ </span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: valid</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.400   setosa    :10  </span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.425   versicolor:10  </span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.900   virginica :10  </span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.903                  </span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.300                  </span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.900                  </span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------ </span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: test</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.700   setosa    :10  </span></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.100   versicolor:10  </span></span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.700   virginica :10  </span></span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.807                  </span></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.475                  </span></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.100</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3451</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>ir <span class="ot">&lt;-</span> iris[<span class="fu">c</span>(<span class="st">&quot;Sepal.Length&quot;</span>, <span class="st">&quot;Species&quot;</span>)]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">multi_strata</span>(ir, <span class="at">k =</span> <span class="dv">5</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>inds <span class="ot">&lt;-</span> <span class="fu">partition</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  y, <span class="at">p =</span> <span class="fu">c</span>(<span class="at">train =</span> <span class="fl">0.6</span>, <span class="at">valid =</span> <span class="fl">0.2</span>, <span class="at">test =</span> <span class="fl">0.2</span>), <span class="at">split_into_list =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">by</span>(ir, inds, summary)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: train</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.300   setosa    :30  </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.100   versicolor:30  </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.800   virginica :30  </span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.836                  </span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.400                  </span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.700                  </span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------ </span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: valid</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.400   setosa    :10  </span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.425   versicolor:10  </span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.900   virginica :10  </span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.903                  </span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.300                  </span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.900                  </span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------------ </span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; inds: test</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Sepal.Length         Species  </span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Min.   :4.700   setosa    :10  </span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:5.100   versicolor:10  </span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Median :5.700   virginica :10  </span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Mean   :5.807                  </span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:6.475                  </span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Max.   :7.100</span></span></code></pre></div>
+</div>
 </div>
 
 

@@ -1,3 +1,8 @@
+# splitTools 1.0.1
+
+- Documentation update.
+- Remove dependency {ranger}.
+
 # splitTools 1.0.0
 
 - Documentation update

@@ -17,10 +17,11 @@ partition(
 }
 \arguments{
 \item{y}{Either the variable used for "stratification" or "grouped" splits.
-For other types of splits, any vector of the same length as the data intended to split.}
+For other types of splits, any vector of the same length as the data
+intended to split.}
 
 \item{p}{A vector with split probabilities per partition, e.g.,
-c(train = 0.7, valid = 0.3). Names are passed to the output.}
+\code{c(train = 0.7, valid = 0.3)}. Names are passed to the output.}
 
 \item{type}{Split type. One of "stratified" (default), "basic", "grouped", "blocked".}
 
@@ -28,7 +29,7 @@ c(train = 0.7, valid = 0.3). Names are passed to the output.}
 (only for \code{type = "stratified"}).}
 
 \item{split_into_list}{Should the resulting partition vector be split into a list?
-Default is\code{TRUE}.}
+Default is \code{TRUE}.}
 
 \item{use_names}{Should names of \code{p} be used as partition names?
 Default is \code{TRUE}.}
@@ -69,4 +70,7 @@ partition(y, p, split_into_list = FALSE, seed = 1)
 partition(y, p, split_into_list = FALSE, use_names = FALSE, seed = 1)
 partition(y, p = c(0.7, 0.3), type = "grouped")
 partition(y, p = c(0.7, 0.3), type = "blocked")
+}
+\seealso{
+\code{\link[=create_folds]{create_folds()}}
 }
